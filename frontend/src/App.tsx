@@ -5,6 +5,9 @@ import Signup from "./pages/signup/Signup";
 import Dashboard from "./pages/dashboard/Dashboard";
 
 import Step3Waitlist from "./pages/signup/components/Step3Waitlist";
+import ResetPassword from "./pages/resetPassword/ResetPassword";
+
+import GoogleCallback from "./pages/googleCallback/GoogleCallback";
 
 import { ProtectedRoute } from "./guards/ProtectedRoute";
 
@@ -17,6 +20,11 @@ export default function App() {
       {/* public */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route
+          path="/auth/google/callback"
+          element={<GoogleCallback />}
+      />
 
       {/* protected */}
       <Route
@@ -28,7 +36,6 @@ export default function App() {
         }
       />
 
-      {/* ✅ FIXED WAITLIST ROUTE */}
       <Route
         path="/waitlist"
         element={
@@ -37,6 +44,9 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+
+
     </Routes>
   );
 }

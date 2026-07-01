@@ -1,12 +1,12 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from datetime import datetime, timezone
 
 from app.core.security import bearer_scheme, decode_access_token
 from app.db.session import get_db
 from app.models.user import User
 from app.models.session import UserSession
-from datetime import datetime, timezone
 
 
 def get_current_user(
@@ -15,9 +15,7 @@ def get_current_user(
 ) -> User:
 
     token = credentials.credentials
-
     payload = decode_access_token(token)
-    print("TOKEN PAYLOAD:", payload)
 
     if not payload:
         raise HTTPException(
@@ -38,7 +36,7 @@ def get_current_user(
 
     try:
         user_id_int = int(user_id)
-    except:
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token subject",
@@ -47,13 +45,11 @@ def get_current_user(
 
     now = datetime.now(timezone.utc)
 
-    # 🔥 IMPORTANT FIX: SESSION MUST MATCH ACCESS TOKEN
     session = db.query(UserSession).filter(
         UserSession.user_id == user_id_int,
-        UserSession.is_active == True,
+        UserSession.is_active.is_(True),
         UserSession.expires_at > now
     ).first()
-    print("FOUND SESSION:", session)
 
     if not session:
         raise HTTPException(

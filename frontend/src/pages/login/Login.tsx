@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useContext } from "react"
 import { getApiError } from "../../utils/getApiError";
 import { AuthContext } from "../../auth/AuthContext"
+import { getGoogleLoginUrl } from "../../api/google";
 import "./Login.css"
 import logo from "../../assets/logo.svg"
 import loginImage from "../../assets/login.png"
@@ -94,6 +95,17 @@ export default function Login() {
 
     }finally {
       setLoading(false);
+    }
+  }
+
+
+  async function handleGoogleLogin() {
+    try {
+      const url = getGoogleLoginUrl();
+
+      window.location.href = url;
+    } catch {
+      setError("Unable to connect to Google.");
     }
   }
 
@@ -221,7 +233,7 @@ export default function Login() {
               <div className="forgot-password-row">
               <Link
                 className={`forgot-password ${loading ? "disabled" : ""}`}
-                to={loading ? "#" : "/forgot-password"}
+                to={loading ? "/reset-password" : "/reset-password"}
                 onClick={(e) => {
                   if (loading) e.preventDefault();
                 }}
@@ -251,7 +263,13 @@ export default function Login() {
             </div>
 
             <div className="social-row">
-              <button type="button" className="social-btn" aria-label="Continue with Google">
+              <button
+                type="button"
+                className="social-btn"
+                aria-label="Continue with Google"
+                onClick={handleGoogleLogin}
+
+              >
                 <svg viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v2.97h3.86c2.26-2.09 3.56-5.17 3.56-8.79z" />
                   <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-2.97c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.07C3.26 21.3 7.31 24 12 24z" />

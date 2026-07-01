@@ -11,6 +11,32 @@ class UserCreate(BaseModel):
         max_length=64
     )
 
+
+# =========================
+# VERIFY REGISTRATION
+# =========================
+class VerifyRegistrationRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(
+        min_length=6,
+        max_length=6
+    )
+
+
+# =========================
+# COMPLETE REGISTRATION
+# =========================
+class CompleteRegistrationRequest(BaseModel):
+    email: EmailStr
+
+
+# =========================
+# RESEND REGISTRATION CODE
+# =========================
+class ResendRegistrationCodeRequest(BaseModel):
+    email: EmailStr
+
+
 # =========================
 # LOGIN
 # =========================
@@ -45,9 +71,46 @@ class Token(BaseModel):
 
 
 # =========================
-# OPTIONAL: USER RESPONSE SHAPE (VERY USEFUL NEXT STEP)
+# USER RESPONSE
 # =========================
 class UserOut(BaseModel):
     id: int
     full_name: str | None
     email: EmailStr
+
+
+# =========================
+# FORGOT PASSWORD
+# =========================
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+# =========================
+# VERIFY RESET CODE
+# =========================
+class VerifyResetCodeRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(
+        min_length=6,
+        max_length=6
+    )
+
+
+# =========================
+# RESET PASSWORD
+# =========================
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(
+        min_length=6,
+        max_length=6
+    )
+    new_password: str = Field(
+        min_length=8,
+        max_length=64
+    )
+
+
+class GoogleTicketRequest(BaseModel):
+    ticket: str

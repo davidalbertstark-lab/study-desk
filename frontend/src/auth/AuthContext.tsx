@@ -9,11 +9,12 @@ type AuthContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
   loading: boolean;
+  logout: () => void;
 };
 
-export const AuthContext = createContext<
-  AuthContextType | undefined
->(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 type Props = {
   children: ReactNode;
@@ -23,6 +24,17 @@ export const AuthProvider = ({ children }: Props) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // =========================
+  // LOGOUT
+  // =========================
+  const logout = () => {
+    clearTokens();
+    setUser(null);
+  };
+
+  // =========================
+  // LOAD USER (SAFE BOOTSTRAP)
+  // =========================
   const loadUser = async () => {
     try {
       const token = getAccessToken();
@@ -36,11 +48,18 @@ export const AuthProvider = ({ children }: Props) => {
 
       setUser(res.data.data);
     } catch (err: any) {
-      if (err?.response?.status === 401) {
-        clearTokens();
-      }
+      const status = err?.response?.status;
 
-      setUser(null);
+      // If unauthorized → session invalid
+      if (status === 401) {
+        logout();
+      } else if (status === 404) {
+        // User might not exist yet (registration not completed)
+        setUser(null);
+      } else {
+        // Any other error → fail safely
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -56,6 +75,7 @@ export const AuthProvider = ({ children }: Props) => {
         user,
         setUser,
         loading,
+        logout,
       }}
     >
       {children}

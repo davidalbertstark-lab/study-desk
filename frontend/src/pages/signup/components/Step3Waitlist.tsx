@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { AuthContext } from "../../../auth/AuthContext";
 import api from "../../../api/client";
 import AuthLayout from "../../../components/layout/AuthLayout";
+
 import "../Signup.css";
 
 interface WaitlistData {
@@ -21,8 +24,13 @@ export default function Step3Waitlist() {
   const [waitlist, setWaitlist] = useState<WaitlistData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // This page is always Step 3.
-  const step = 3;
+  const auth = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    auth?.logout();
+    navigate("/login", { replace: true });
+  }
 
   useEffect(() => {
     async function fetchWaitlist() {
@@ -39,6 +47,10 @@ export default function Step3Waitlist() {
     fetchWaitlist();
   }, []);
 
+  if (!auth) return null;
+
+  const step = 3;
+
   return (
     <AuthLayout
       title="You're on the waitlist 🎉"
@@ -50,7 +62,6 @@ export default function Step3Waitlist() {
         </div>
       ) : (
         <div className="waitlist-confirmation">
-          {/* ---------------- Step Indicator ---------------- */}
           <div className="step-indicator">
             {STEPS.map((s, i) => (
               <div
@@ -105,7 +116,6 @@ export default function Step3Waitlist() {
             ))}
           </div>
 
-          {/* ---------------- Waitlist Content ---------------- */}
           <div className="waitlist-check-circle">
             <svg
               viewBox="0 0 24 24"
@@ -157,9 +167,13 @@ export default function Step3Waitlist() {
             </div>
           </div>
 
-          <Link to="/login" className="login-btn as-link">
-            Back to Login
-          </Link>
+          <button
+            type="button"
+            className="login-btn"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
 
           <div className="signup-row">
             Need help?

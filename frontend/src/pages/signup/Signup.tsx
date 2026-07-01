@@ -8,12 +8,19 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 
 import SignupLeftPanel from "./components/SignupLeftPanel";
 import Step1Account from "./components/Step1Account";
+import Step1_5EmailVerification from "./components/Step1_5EmailVerification";
+
+import {
+  register,
+  verifyRegistration,
+  completeRegistration,
+  resendRegistrationCode,
+} from "../../api/auth";
 import Step2Academic from "./components/Step2Academic";
 import Step3Waitlist from "./components/Step3Waitlist";
 
 import { AuthContext } from "../../auth/AuthContext";
 import { updateProfile } from "../../api/user";
-import { register } from "../../api/auth";
 import api from "../../api/client";
 
 import logo from "../../assets/logo.svg";
@@ -51,7 +58,12 @@ export default function Signup() {
   }, [auth?.user, completeProfileMode, navigate]);
 
   // FIX: step should NOT be derived in a way that breaks UI flow
-  const [step, setStep] = useState<number>(1);
+  type SignupStep = 1 | 1.5 | 2 | 3;
+
+  const [step, setStep] = useState<SignupStep>(1);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [verificationError, setVerificationError] =
+    useState("");
 
   useEffect(() => {
     if (completeProfileMode) {
@@ -144,12 +156,9 @@ export default function Signup() {
           password
       );
 
-      const res = await api.get("/users/me");
-      auth?.setUser(res.data.data);
+      setPendingEmail(cleanEmail);
 
-      navigate("/signup?completeProfile=true", {
-        replace: true,
-      });
+      setStep(1.5);
     } catch (err: any) {
 
       if (!err.response) {
@@ -176,6 +185,70 @@ export default function Signup() {
     }
   }
 
+
+    async function handleVerifyRegistration(
+    code: string
+  ) {
+    try {
+      setLoading(true);
+      setVerificationError("");
+
+      await verifyRegistration(
+        pendingEmail,
+        code
+      );
+
+      const loginData =
+        await completeRegistration(
+          pendingEmail
+        );
+
+      auth?.setUser(loginData.user);
+
+      navigate("/signup?completeProfile=true", {
+        replace: true,
+      });
+    } catch (err: any) {
+      if (!err.response) {
+        setVerificationError("No internet connection.");
+        return;
+      }
+
+      if (err.response.status >= 500) {
+        setVerificationError(
+          "Something went wrong. Please try again."
+        );
+        return;
+      }
+
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        "Invalid verification code.";
+
+      setVerificationError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResendRegistration() {
+    try {
+      setVerificationError("");
+
+      await resendRegistrationCode(
+        pendingEmail
+      );
+    } catch {
+      // Ignore
+    }
+  }
+
+  function handleBackToSignup() {
+    setStep(1);
+    setVerificationError("");
+  }
+
   return (
     <div className="studydesk-page signup-page">
       <SignupLeftPanel />
@@ -184,7 +257,10 @@ export default function Signup() {
         <div className="signup-card">
 
           <div className="signup-mobile-topbar">
-            {step > 1 && step < 3 && !completeProfileMode && (
+            {step > 1 &&
+            step < 3 &&
+            step !== 1.5 &&
+            !completeProfileMode && (
               <button
                 type="button"
                 className="mobile-back-btn"
@@ -203,6 +279,7 @@ export default function Signup() {
 
             <span className="signup-mobile-title">
               {step === 1 && "Create Account"}
+              {step === 1.5 && "Verify Email"}
               {step === 2 && "Academic Profile"}
               {step === 3 && "Join Waitlist"}
             </span>
@@ -214,7 +291,7 @@ export default function Signup() {
           </div>
 
           {/* Step Indicator */}
-          {step !== 3 && (
+          {step !== 3 && step !== 1.5 && (
             <div className="step-indicator">
               {STEPS.map((s, i) => (
                 <React.Fragment key={s.number}>
@@ -271,6 +348,17 @@ export default function Signup() {
             />
           )}
 
+          {step === 1.5 && (
+            <Step1_5EmailVerification
+              email={pendingEmail}
+              loading={loading}
+              error={verificationError}
+              onVerify={handleVerifyRegistration}
+              onResend={handleResendRegistration}
+              onBack={handleBackToSignup}
+            />
+          )}
+
           {/* STEP 2 */}
           {step === 2 && (
             <Step2Academic
@@ -285,8 +373,13 @@ export default function Signup() {
               department={department}
               setDepartment={setDepartment}
               onNext={() => setStep(3)}
-              onBack={() => setStep(1)}
-              disableBack={completeProfileMode}
+              onBack={() => {
+                if (completeProfileMode) {
+                  navigate("/login");
+                } else {
+                  setStep(1);
+                }
+              }}
               completeProfileMode={completeProfileMode}
               onCompleteProfile={handleCompleteProfile}
             />

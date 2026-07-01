@@ -2,45 +2,8 @@ import api from "./client";
 import { saveTokens } from "../utils/token";
 import type { User } from "../types/user";
 
-export async function register(
-  email: string,
-  password: string
-): Promise<LoginResponse> {
-  const res = await api.post("/auth/register", {
-    email,
-    password,
-  });
-
-  console.log(res.data);
-
-  const payload = res.data.data;
-
-  console.log(payload);
-
-  saveTokens(
-      payload.access_token,
-      payload.refresh_token
-  );
-
-  console.log(localStorage);
-
-  const data: LoginResponse = {
-    user: payload.user,
-    access_token: payload.access_token,
-    refresh_token: payload.refresh_token,
-    token_type: payload.token_type,
-  };
-
-  saveTokens(
-    data.access_token,
-    data.refresh_token
-  );
-
-  return data;
-}
-
 // =========================
-// LOGIN RESPONSE (FLATTENED)
+// TYPES
 // =========================
 export interface LoginResponse {
   user: User;
@@ -64,20 +27,34 @@ function getDeviceId(): string {
 }
 
 // =========================
-// LOGIN (CLEAN VERSION)
+// REGISTER (STEP 1)
 // =========================
-export async function login(
-  email: string,
-  password: string
-): Promise<LoginResponse> {
-  const res = await api.post("/auth/login", {
+export async function register(email: string, password: string): Promise<void> {
+  await api.post("/auth/register", {
     email,
     password,
-    device_id: getDeviceId(),
+  });
+}
+
+// =========================
+// VERIFY EMAIL (STEP 2)
+// =========================
+export async function verifyRegistration(email: string, code: string): Promise<void> {
+  await api.post("/auth/verify-registration", {
+    email,
+    code,
+  });
+}
+
+// =========================
+// COMPLETE REGISTRATION (STEP 3)
+// =========================
+export async function completeRegistration(email: string): Promise<LoginResponse> {
+  const res = await api.post("/auth/complete-registration", {
+    email,
   });
 
-  // backend wrapper
-  const payload = res.data?.data;
+  const payload = res.data.data;
 
   const data: LoginResponse = {
     user: payload.user,
@@ -86,8 +63,71 @@ export async function login(
     token_type: payload.token_type,
   };
 
-  // store tokens here (single responsibility rule)
   saveTokens(data.access_token, data.refresh_token);
 
   return data;
+}
+
+// =========================
+// LOGIN
+// =========================
+export async function login(
+  email: string,
+  password: string,
+  rememberMe: boolean = false
+): Promise<LoginResponse> {
+  const res = await api.post("/auth/login", {
+    email,
+    password,
+    remember_me: rememberMe,
+    device_id: getDeviceId(),
+  });
+
+  const payload = res.data.data;
+
+  const data: LoginResponse = {
+    user: payload.user,
+    access_token: payload.access_token,
+    refresh_token: payload.refresh_token,
+    token_type: payload.token_type,
+  };
+
+  saveTokens(data.access_token, data.refresh_token);
+
+  return data;
+}
+
+// =========================
+// PASSWORD RESET
+// =========================
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post("/auth/forgot-password", { email });
+}
+
+export async function verifyResetCode(email: string, code: string): Promise<void> {
+  await api.post("/auth/verify-reset-code", { email, code });
+}
+
+export async function resetPassword(
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<void> {
+  await api.post("/auth/reset-password", {
+    email,
+    code,
+    new_password: newPassword,
+  });
+}
+
+
+// =========================
+// RESEND REGISTRATION CODE
+// =========================
+export async function resendRegistrationCode(
+  email: string
+): Promise<void> {
+  await api.post("/auth/resend-registration-code", {
+    email,
+  });
 }

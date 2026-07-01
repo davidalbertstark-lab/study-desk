@@ -4,20 +4,23 @@ export function getApiError(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data;
 
-    if (typeof data?.detail === "string") {
-      return data.detail;
-    }
+    const message =
+      typeof data?.detail === "string"
+        ? data.detail
+        : typeof data?.message === "string"
+        ? data.message
+        : typeof data?.error === "string"
+        ? data.error
+        : typeof data?.data?.message === "string"
+        ? data.data.message
+        : null;
 
-    if (typeof data?.message === "string") {
-      return data.message;
-    }
+    if (message) {
+      if (message.toLowerCase() === "invalid credentials") {
+        return "Incorrect email or password.";
+      }
 
-    if (typeof data?.error === "string") {
-      return data.error;
-    }
-
-    if (typeof data?.data?.message === "string") {
-      return data.data.message;
+      return message;
     }
 
     if (!navigator.onLine) {

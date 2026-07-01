@@ -348,7 +348,7 @@ export default function Step2Academic({
       </form>
             {!disableBack && (
         <button
-          disabled={disableBack || loading}
+          disabled={loading}
           type="button"
           className="back-link"
           onClick={() => {

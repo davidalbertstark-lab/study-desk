@@ -1,4 +1,3 @@
-# Standard/FastAPI
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -20,6 +19,8 @@ from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as user_router
 from app.modules.departments.router import router as dept_router
 from app.modules.waitlist.router import router as waitlist_router
+from app.modules.auth.exceptions import AuthException
+from app.core.exceptions import auth_exception_handler
 
 app = FastAPI(title="Study Desk API")
 
@@ -61,6 +62,11 @@ app.add_exception_handler(
 app.add_exception_handler(
     Exception,
     general_exception_handler
+)
+
+app.add_exception_handler(
+    AuthException,
+    auth_exception_handler
 )
 
 

@@ -18,12 +18,26 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_REMEMBER_DAYS: int = 30
 
     # =========================
+    # EMAIL (SMTP)
+    # =========================
+    SMTP_HOST: str
+    SMTP_PORT: int = 587
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    EMAIL_FROM: str
+
+    # =========================
     # GOOGLE OAUTH
-    # (optional for now)
     # =========================
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
     GOOGLE_REDIRECT_URI: str | None = None
+
+    GOOGLE_DISCOVERY_URL: str = (
+        "https://accounts.google.com/.well-known/openid-configuration"
+    )
+
+    FRONTEND_URL: str
 
     # =========================
     # ENVIRONMENT

@@ -9,19 +9,31 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    # identity
+    # =========================
+    # Identity
+    # =========================
     full_name = Column(String, nullable=True)
     email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)
+
     matric_number = Column(String, unique=True, nullable=True)
     level = Column(String, nullable=True)
     faculty = Column(String, nullable=True)
 
-    # auth provider support
+    # =========================
+    # OAuth
+    # =========================
     auth_provider = Column(String, default="local")  # local | google
-    provider_id = Column(String, nullable=True, index=True)
+    provider_id = Column(
+        String,
+        nullable=True,
+        unique=True,
+        index=True,
+    )
 
-    # system state
+    # =========================
+    # Account State
+    # =========================
     status = Column(String, default="WAITLISTED")
     # WAITLISTED | ACTIVE | REJECTED
 
@@ -32,9 +44,37 @@ class User(Base):
         Integer,
         ForeignKey("departments.id", use_alter=True),
         nullable=True,
-        index=True
+        index=True,
     )
 
     profile_completed = Column(Boolean, default=False)
 
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    # =========================
+    # Password Reset
+    # =========================
+    reset_code_hash = Column(String, nullable=True)
+
+    reset_code_expires_at = Column(
+        DateTime,
+        nullable=True
+    )
+
+    reset_attempts = Column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
+
+    reset_verified = Column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    # =========================
+    # Metadata
+    # =========================
+    created_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc)
+    )
